@@ -11,9 +11,10 @@ Vue.config.productionTip = false
 Vue.use(VueRouter)
 
 import Dashboard from './components/Dashboard.vue';
+import MoviesList from './components/MoviesList.vue';
 
 const routes = [
-	{ path: '/', components: Dashboard },
+	{ path: '/movies', component: MoviesList}
 ]
 
 const router = new VueRouter({
