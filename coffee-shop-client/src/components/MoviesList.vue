@@ -1,6 +1,7 @@
 <template>
-    <div class="container">
-        <table class="table">
+    <div>
+        <span class="help is-info"  v-if="isLoading">Loading...</span>
+        <table class="table" v-else>
             <thead>
                 <tr>
                     <th>ID</th>
@@ -14,26 +15,66 @@
                         <td>{{ movie.id }}</td>
                         <td>{{ movie.title }}</td>
                         <td>{{ movie.count }}</td>
+                        <td>
+                            <form @submit.prevent="onSubmit(movie)">
+                                <button class="button is-primary" v-bind:class="{ 'is-loading' : isCountUpdating(movie.id) }">Increase Count</button>
+                            </form>
+                        </td>
                     </tr>
                 </template>
             </tbody>
         </table>
-        <a class="button is-primary">Add Movie</a>
+        <movie-form @completed="addMovie"></movie-form>
     </div>
 </template>
 
 <script>
 import axios from 'axios'
+import Vue from 'vue'
+import MovieForm from './MovieForm.vue'
 
 export default {
+
+    components:{
+        MovieForm
+    },
     data(){
         return {
-            movies: {}
+            movies: {},
+            isLoading: true,
+            countUpdatingTable: []
         }
     },
     async created() {
+       
         const response = await axios.get('http://localhost:8000/movies')
         this.movies = response.data
+        this.isLoading = false
+      
+    },
+    methods: {
+        onSubmit(movie) {
+            Vue.set(this.countUpdatingTable, movie.id, true)
+            this.increaseCount(movie)
+        },
+        async increaseCount(movie) {
+            //axios.defaults.headers.common['Authorization'] = `Bearer ${await this.$auth.getAccessToken()}`
+            axios.post('http://localhost:8000/movies/' + movie.id + '/count')
+                .then(response => {
+                    movie.count = response.data.count
+                    this.countUpdatingTable[movie.id] = false
+                })
+                .catch(() => {
+                    // handle authentication and validation errors here
+                    this.countUpdatingTable[movie.id] = false
+                })
+        },
+        isCountUpdating(id) {
+            return this.countUpdatingTable[id]
+        },
+        addMovie(movie) {
+            this.movies.push(movie)
+        }
     }
 }
 </script>
